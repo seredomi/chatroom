@@ -49,7 +49,6 @@ void *ReceiveAndSend(void *cs) {
 
   send(clientSocket, welcomeMsg, 54, 0);
 
-
   while (true) {
     // clear the buffer
     memset(buffer, 0, 4096);
@@ -83,7 +82,6 @@ void *ReceiveAndSend(void *cs) {
 }
 
 
-
 // this could probably get broken up into a function or two
 int main(int argc, char **argv) {
   int port;
@@ -94,7 +92,6 @@ int main(int argc, char **argv) {
     cin >> port;
   }
   else portNumber = stoi(argv[1]);
-
 
   // all this just establishes a listening socket
   int listening;
