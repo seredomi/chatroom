@@ -23,18 +23,17 @@ void *ReceiveMessages(void *hs) {
     // blocking call waits on message from host
     bytesRecvd = recv(hostSocket, buffer, 4096, 0);
     if (bytesRecvd == -1) {
-      cerr << "Connection error.\n";
+      cerr << "Unable to listen for messages: connection error.\n";
       break;
     }
     if (bytesRecvd == 0) {
-      cerr << "Chat server shut down.\n";
+      cerr << "This chatroom has been shut down.\n";
       break;
     }
     cout << string(buffer, bytesRecvd) << '\n';
   }
 
   close(hostSocket); pthread_exit(NULL);
-
 }
 
 
@@ -59,7 +58,7 @@ int main(int argc, char **argv) {
   long sock = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sock == -1) {
-    cerr << "Unable to create socket\n";
+    cerr << "Unable to join chatroom: local socket error\n";
     return -1;
   }
 
@@ -70,7 +69,7 @@ int main(int argc, char **argv) {
 
   int connectCode = connect(sock, (sockaddr*) &hint, sizeof(hint));
   if (connectCode == -1) {
-    cerr << "Unable to connect\n";
+    cerr << "Unable to join chatroom: connection error\n";
     return -1;
   }
 
@@ -79,11 +78,11 @@ int main(int argc, char **argv) {
   int threadCode;
   threadCode = pthread_create(&msgReceiver, NULL, ReceiveMessages, (void *) sock);
   if (threadCode) {
-    cerr << "Failed to create thread\n";
+    cerr << "Unable to listen for messages: local thread error\n";
     return -1;
   }
 
-  // continually prompt user to input message, transmit message back to host
+  // continually send messages from user
   while (true) {
     string userIn;
 
@@ -91,10 +90,9 @@ int main(int argc, char **argv) {
 
     int sendCode = send(sock, userIn.c_str(), userIn.size() + 1, 0);
     if (sendCode == -1) {
-        cerr << "Unable to transmit message\n";
+        cerr << "Unable to send up message\n";
         return -1;
     }
-
   }
 
   close(sock);
