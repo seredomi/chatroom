@@ -18,7 +18,6 @@ using namespace std;
 vector<long> clientSockets;
 
 
-
 // this function is spawned for every client that connects, and runs until they disconnect
 void *ReceiveAndSend(void *cs) {
   const char usernameMsg[] = "Enter a username:";
@@ -123,7 +122,6 @@ int main(int argc, char **argv) {
   struct sockaddr_in *listeningSocket = (struct sockaddr_in *) &listening;
   cout << "Hosting chat on IP: " << inet_ntoa(listeningSocket->sin_addr) << " port number: " << listeningSocket->sin_port << '\n';
 
-
   // infinitely wait for clients to attatch themselves
   while (true) {
     cout << "Listening for clients...\n";
@@ -142,7 +140,6 @@ int main(int argc, char **argv) {
     // add socket to global vector
     clientSockets.push_back(clientSocket);
 
-
     cout << "Incoming connection from IP: " << inet_ntoa(client.sin_addr) << ' ' << " port number: " << client.sin_port << '\n';
 
     // create a thread that waits for messages from that client
@@ -157,5 +154,4 @@ int main(int argc, char **argv) {
   }
 
   pthread_exit(NULL);
-
 }
