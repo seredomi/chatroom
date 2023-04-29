@@ -16,17 +16,3 @@ here's what it does:
     - it spawns a ReceiveMessages thread, which continually waits on chat updates from the host
     - it also continually prompts the user to enter a message and relays that to the host's ReceiveAndSend
 
-
-things i think we can implement in the next 2-3 days (feel free to add to this list and we can just cross things off as we go):
-
-TODO
-easier:
-- better prompts?
-- testing on Mac, testing on CSU computers
-
-harder:
-- allow participant to quit by sending a keyword, like "#stop" or something
-- fix ip port reporting on host
-- keep a message log? (probably requires like a mutex or some shared memory safeguard thing)
-- chatroom name?
-- create multiple chatrooms? (might be overkill)
