@@ -21,7 +21,8 @@ vector<long> clientSockets;
 
 // this function is spawned for every client that connects, and runs until they disconnect
 void *ReceiveAndSend(void *cs) {
-  const char usernameMsg[] = "Enter a username (must be less than 20 characters): \n";
+  const char usernameMsg[] = "Enter a username:";
+  const char welcomeMsg[] = "Welcome to the chat. To send a message, press enter.\n";
   string username = "Unkown participant";
   time_t currTime;
   int bytesRecv;
@@ -33,7 +34,7 @@ void *ReceiveAndSend(void *cs) {
   // buffer will store the message as it comes from client
   char buffer[4096];
 
-  send(clientSocket, usernameMsg, 53, 0);
+  send(clientSocket, usernameMsg, 18, 0);
   int unBytesRecv = recv(clientSocket, buffer, 4096, 0);
   if (unBytesRecv == -1) {
     cerr << username << " unable to join chat.\n";
@@ -45,6 +46,8 @@ void *ReceiveAndSend(void *cs) {
   }
   username = string(buffer);
   cout << username << " joined the chat.\n";
+
+  send(clientSocket, welcomeMsg, 54, 0);
 
 
   while (true) {
