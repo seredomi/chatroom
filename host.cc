@@ -14,65 +14,78 @@
 
 using namespace std;
 
-// global variable to store client sockets until we find a better solution
+// global variable stores client sockets
 vector<long> clientSockets;
-
 
 // this function is spawned for every client that connects, and runs until they disconnect
 void *ReceiveAndSend(void *cs) {
+  // const messages
   const char usernameMsg[] = "Enter a username:";
   const char welcomeMsg[] = "Welcome to the chat. To send a message, press enter.\n";
   string username = "Unkown participant";
   time_t currTime;
   int bytesRecv;
   char timeBuf[6];
+  char buffer[4096];
   string message;
 
-  // convert pointer thing to actual socket number
+  // convert pointer to long with actual socket number
   long clientSocket = (long) cs;
-  // buffer will store the message as it comes from client
-  char buffer[4096];
 
+  // prompt client for username, wait on response and store it
+  // update broadcast status to other clients
   send(clientSocket, usernameMsg, 18, 0);
   int unBytesRecv = recv(clientSocket, buffer, 4096, 0);
   if (unBytesRecv == -1) {
-    cerr << username << " unable to join chat.\n";
+    cerr << username << " was unable to join chat.\n";
     close(clientSocket); pthread_exit(NULL);
   }
   if (unBytesRecv == 0) {
-    cerr << username << " left the chat.\n";
+    message = username + " has left the chat.\n"s;
+    for (auto client : clientSockets)
+      send(client, message.c_str(), message.length() + 1, 0);
+
     close(clientSocket); pthread_exit(NULL);
   }
   username = string(buffer);
-  cout << username << " joined the chat.\n";
+  message = username + " has joined the chat.\n"s;
+  for (auto client : clientSockets)
+    send(client, message.c_str(), message.length() + 1, 0);
 
+  // send welcome message to client
   send(clientSocket, welcomeMsg, 54, 0);
+  unsigned int msgLength = 4090 - username.length();
 
+  // continually wait for and broadcast messages from client
   while (true) {
     // clear the buffer
     memset(buffer, 0, 4096);
 
     // blocking call waits for a message from client
-    bytesRecv = recv(clientSocket, buffer, 4096, 0);
+    bytesRecv = recv(clientSocket, buffer, msgLength, 0);
+    // mark current time
     currTime = time(nullptr);
-    //memset(timeBuf, 0, 6);
     strftime(timeBuf, 6, "%H:%M", localtime(&currTime));
 
+    // error messages
     if (bytesRecv == -1) {
-      cerr << username << "had a connection issue.\n";
+      message = username + " had a connection issue.\n"s;
+      for (auto client : clientSockets)
+        send(client, message.c_str(), message.length() + 1, 0);
       break;
     }
     if (bytesRecv == 0) {
-      cout << username << " left the chat.\n";
+      message = username + " has left the chat.\n"s;
+      for (auto client : clientSockets)
+        send(client, message.c_str(), message.length() + 1, 0);
       break;
     }
 
-    message = timeBuf + " "s + username + ": "s + buffer;
-
+    // successful message retrieval: concatenate with time and username, broadcast to other clients
     cout << "received " << string(buffer, sizeof(buffer)) << '\n'; // just for troubleshooting
-    // transmit message to every client in the global vector
+    message = timeBuf + " "s + username + ": "s + buffer;
     for (auto client : clientSockets)
-      send(client, message.c_str(), bytesRecv + unBytesRecv + 8, 0);
+      send(client, message.c_str(), bytesRecv + unBytesRecv + 7, 0);
   }
 
   close(clientSocket);
@@ -81,18 +94,17 @@ void *ReceiveAndSend(void *cs) {
 }
 
 
-// this could probably get broken up into a function or two
 int main(int argc, char **argv) {
-  int port;
 
+  // handle args or no args and store port number
   int portNumber;
   if (argc < 2) {
     cout << "Enter port number:\n";
-    cin >> port;
+    cin >> portNumber;
   }
   else portNumber = stoi(argv[1]);
 
-  // all this just establishes a listening socket
+  // establish a listening socket
   int listening;
   long clientSocket;
 
@@ -106,7 +118,7 @@ int main(int argc, char **argv) {
   struct sockaddr_in hint;
   hint.sin_family = AF_INET;
   hint.sin_port = htons(portNumber);
-  inet_pton(AF_INET, "0.0.0.0", &hint.sin_addr); // 0.0.0.0 lets the IP default to the system its on or something
+  inet_pton(AF_INET, "0.0.0.0", &hint.sin_addr); // 0.0.0.0 lets the IP default to the system its on
 
   if (bind(listening, (sockaddr*)&hint, sizeof(hint)) == -1) {
     cerr << "Unable to bind to IP/port.";
@@ -115,19 +127,19 @@ int main(int argc, char **argv) {
   cout << "Binded to IP/port\n";
 
   if (listen(listening, SOMAXCONN) == -1) {
-    cerr << "Unable to listen";
+    cerr << "Unable to listen.\n";
     return -1;
   }
 
-  struct sockaddr_in *listeningSocket = (struct sockaddr_in *) &listening;
-  cout << "Hosting chat on IP: " << inet_ntoa(listeningSocket->sin_addr) << " port number: " << listeningSocket->sin_port << '\n';
+  // struct sockaddr_in *listeningSocket = (struct sockaddr_in *) &listening;
+  // cout << "Hosting chat on IP: " << inet_ntoa(listeningSocket->sin_addr) << " port number: " << listeningSocket->sin_port << '\n';
+
+  sockaddr_in client;
+  socklen_t clientSize = sizeof(client);
 
   // infinitely wait for clients to attatch themselves
   while (true) {
     cout << "Listening for clients...\n";
-
-    sockaddr_in client;
-    socklen_t clientSize = sizeof(client);
 
     // blocking call waits for client
     clientSocket = accept(listening, (struct sockaddr*)&client, &clientSize);
@@ -137,10 +149,10 @@ int main(int argc, char **argv) {
       return -1;
     }
 
-    // add socket to global vector
+    // add socket to global clientSockets vector
     clientSockets.push_back(clientSocket);
 
-    cout << "Incoming connection from IP: " << inet_ntoa(client.sin_addr) << ' ' << " port number: " << client.sin_port << '\n';
+    // cout << "Incoming connection from IP: " << inet_ntoa(client.sin_addr) << ' ' << " port number: " << client.sin_port << '\n';
 
     // create a thread that waits for messages from that client
     pthread_t newClient;
@@ -150,7 +162,6 @@ int main(int argc, char **argv) {
       cerr << "Failed to create thread";
       return -1;
     }
-
   }
 
   pthread_exit(NULL);

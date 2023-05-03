@@ -30,6 +30,7 @@ void *ReceiveMessages(void *hs) {
       cerr << "This chatroom has been shut down.\n";
       break;
     }
+    // print message
     cout << string(buffer, bytesRecvd) << '\n';
   }
 
@@ -37,12 +38,12 @@ void *ReceiveMessages(void *hs) {
 }
 
 
-// also could use some tidying up
 int main(int argc, char **argv) {
 
   int port;
   string ip;
 
+  // assign IP and port if not passed as args
   if (argc < 3) {
     cout << "Enter IP:\n";
     cin >> ip;
@@ -54,9 +55,8 @@ int main(int argc, char **argv) {
     port = stoi(argv[2]);
   }
 
-  // create the socket and stuff
+  // create the socket
   long sock = socket(AF_INET, SOCK_STREAM, 0);
-
   if (sock == -1) {
     cerr << "Unable to join chatroom: local socket error\n";
     return -1;
@@ -67,13 +67,14 @@ int main(int argc, char **argv) {
   hint.sin_port = htons(port);
   inet_pton(AF_INET, ip.c_str(), &hint.sin_addr);
 
+  // connect to host
   int connectCode = connect(sock, (sockaddr*) &hint, sizeof(hint));
   if (connectCode == -1) {
     cerr << "Unable to join chatroom: connection error\n";
     return -1;
   }
 
-  // run the parallel thread that monitors for chat updates
+  // run parallel thread that monitors for chat updates
   pthread_t msgReceiver;
   int threadCode;
   threadCode = pthread_create(&msgReceiver, NULL, ReceiveMessages, (void *) sock);
@@ -82,15 +83,19 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  // continually send messages from user
+  // continually send messages from user's standard in
   while (true) {
-    string userIn;
 
+    string userIn;
     getline(cin, userIn);
+    while (userIn.length() > 4096) {
+      cout << "Your message must be less than 4096 characters.\n";
+      getline(cin, userIn);
+    }
 
     int sendCode = send(sock, userIn.c_str(), userIn.size() + 1, 0);
     if (sendCode == -1) {
-        cerr << "Unable to send up message\n";
+        cerr << "Unable to send message\n";
         return -1;
     }
   }
