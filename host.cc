@@ -42,13 +42,15 @@ void *ReceiveAndSend(void *cs) {
   }
   if (unBytesRecv == 0) {
     message = username + " has left the chat.\n"s;
+    cout << message;
     for (auto client : clientSockets)
       send(client, message.c_str(), message.length() + 1, 0);
 
     close(clientSocket); pthread_exit(NULL);
   }
   username = string(buffer);
-  message = username + " has joined the chat.\n"s;
+  message = "\n" + username + " has joined the chat.\n"s;
+  cout << message;
   for (auto client : clientSockets)
     send(client, message.c_str(), message.length() + 1, 0);
 
@@ -82,7 +84,7 @@ void *ReceiveAndSend(void *cs) {
     }
 
     // successful message retrieval: concatenate with time and username, broadcast to other clients
-    cout << "received " << string(buffer, sizeof(buffer)) << '\n'; // just for troubleshooting
+    cout << username << ": " << string(buffer, sizeof(buffer)) << '\n'; // just for troubleshooting
     message = timeBuf + " "s + username + ": "s + buffer;
     for (auto client : clientSockets)
       send(client, message.c_str(), bytesRecv + unBytesRecv + 7, 0);
