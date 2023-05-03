@@ -45,9 +45,9 @@ int main(int argc, char **argv) {
 
   // assign IP and port if not passed as args
   if (argc < 3) {
-    cout << "Enter IP:\n";
+    cout << "\nEnter IP:\n";
     cin >> ip;
-    cout << "Enter port:\n";
+    cout << "\nEnter port:\n";
     cin >> port;
   }
   else {
