@@ -21,7 +21,8 @@ vector<long> clientSockets;
 void *ReceiveAndSend(void *cs) {
   // const messages
   const char usernameMsg[] = "Enter a username:";
-  const char welcomeMsg[] = "Welcome to the chat. To send a message, press enter. Enter 0 to exit.\n";
+  const char welcomeMsg[] = "Welcome to the chat. To send a message, press enter.\n";
+  const char exitMsg[] = "Enter 0 to exit the chat room.";
   string username = "Unkown participant";
   time_t currTime;
   int bytesRecv;
@@ -56,6 +57,7 @@ void *ReceiveAndSend(void *cs) {
 
   // send welcome message to client
   send(clientSocket, welcomeMsg, 54, 0);
+    send(clientSocket, exitMsg, 54, 0);
   unsigned int msgLength = 4090 - username.length();
 
   // continually wait for and broadcast messages from client
