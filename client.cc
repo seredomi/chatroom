@@ -84,7 +84,8 @@ int main(int argc, char **argv) {
   }
 
   // continually send messages from user's standard in
-  while (true) {
+  bool exit = false;
+  while (!exit){
 
     string userIn;
     getline(cin, userIn);
@@ -92,7 +93,10 @@ int main(int argc, char **argv) {
       cout << "Your message must be less than 4096 characters.\n";
       getline(cin, userIn);
     }
-
+    if (userIn == "0"){
+      exit = true;
+      continue;
+    }
     int sendCode = send(sock, userIn.c_str(), userIn.size() + 1, 0);
     if (sendCode == -1) {
         cerr << "Unable to send message\n";
