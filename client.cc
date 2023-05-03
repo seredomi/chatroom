@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
       cout << "Your message must be less than 4096 characters.\n";
       getline(cin, userIn);
     }
-    if (userIn.length() > 0 && userIn[0] == '0') {
+    if (userIn == "0") {
         break; 
     }
     int sendCode = send(sock, userIn.c_str(), userIn.size() + 1, 0);

@@ -52,12 +52,13 @@ void *ReceiveAndSend(void *cs) {
   username = string(buffer);
   message = "\n" + username + " has joined the chat.\n"s;
   cout << message;
-  for (auto client : clientSockets)
+  for (auto client : clientSockets){
     send(client, message.c_str(), message.length() + 1, 0);
-
-  // send welcome message to client
-  send(clientSocket, welcomeMsg, 54, 0);
+    send(clientSocket, welcomeMsg, 54, 0);
     send(clientSocket, exitMsg, 54, 0);
+
+}
+
   unsigned int msgLength = 4090 - username.length();
 
   // continually wait for and broadcast messages from client
