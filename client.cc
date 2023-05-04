@@ -27,7 +27,7 @@ void *ReceiveMessages(void *hs) {
       break;
     }
     if (bytesRecvd == 0) {
-      cerr << "This chatroom has been shut down.\n";
+      cerr << "This chatroom has been shut down. Press CTL-C to quit.\n";
       break;
     }
     // print message
